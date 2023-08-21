@@ -67,7 +67,7 @@ class vrpn_subscriber(DTROS):
 
 if __name__ == '__main__':
     # create the node
-    node = vrpn_subscriber(node_name='vrpn_subscriber', robot_name="ida")
+    node = vrpn_subscriber(node_name='vrpn_subscriber', robot_name="emma")
     translator = node.construct_translator()
     node.publish_abstract_state()
 

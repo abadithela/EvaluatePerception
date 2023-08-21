@@ -42,7 +42,7 @@ class simple_controller(DTROS):
 
 if __name__ == '__main__':
     # create the node
-    node = simple_controller(node_name='hlp')
+    node = simple_controller(node_name='hlp', robot_name="emma")
     # run node
     node.run()
     # keep spinning

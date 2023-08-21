@@ -15,7 +15,8 @@ class SpeedControlNode(DTROS):
         super(SpeedControlNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         # construct publisher
         self.robot_name = robot_name
-        self.wheel_pub = rospy.Publisher(f"/{os.environ['VEHICLE_NAME']}/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size=1)
+        self.wheel_pub_topic = "/"+robot_name+"/wheels_driver_node/wheels_cmd"
+        self.wheel_pub = rospy.Publisher(self.wheel_pub_topic, WheelsCmdStamped, queue_size=1)
         self.left_speed = 0
         self.right_speed = 0
         self.left_goal = 0.1
@@ -67,7 +68,7 @@ class SpeedControlNode(DTROS):
 
 if __name__ == '__main__':
     # create the node
-    node = SpeedControlNode(node_name='speed_control_node')
+    node = SpeedControlNode(node_name='speed_control_node', robot_name="emma")
     # run node
     node.run()
     # keep spinning

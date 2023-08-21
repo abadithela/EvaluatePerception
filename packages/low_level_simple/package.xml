@@ -1,5 +1,5 @@
 <package>
-  <name>planning</name>
+  <name>low_level_simple</name>
   <version>0.1.0</version>
   <description>
   This package is for planning at the high-level and low-level.

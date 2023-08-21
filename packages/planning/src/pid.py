@@ -74,4 +74,3 @@ class PID:
         return newPower
 
 
-#p = 1, i = 0.001, d = 0.1, f = -1
