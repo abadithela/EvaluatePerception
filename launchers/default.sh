@@ -13,9 +13,12 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 # launching app
-dt-exec echo "This runs the localization launch script."
+dt-exec echo "This runs the localization and planning launch script."
 dt-exec rosrun localization vrpn_to_abstract_state.py
-
+sleep 5
+dt-exec rosrun planning_simple hlp.py
+sleep 5
+dt-exec rosrun low_level_simple wheel_controller.py
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE
 

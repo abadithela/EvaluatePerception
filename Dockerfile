@@ -39,6 +39,7 @@ RUN mkdir -p "${LAUNCH_PATH}"
 WORKDIR "${REPO_PATH}"
 
 # keep some arguments as environment variables
+ENV ROS_MASTER_URI "http://kmws.local:11311/"
 ENV DT_MODULE_TYPE "${REPO_NAME}"
 ENV DT_MODULE_DESCRIPTION "${DESCRIPTION}"
 ENV DT_MODULE_ICON "${ICON}"
