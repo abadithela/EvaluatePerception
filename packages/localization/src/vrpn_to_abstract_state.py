@@ -49,7 +49,10 @@ class vrpn_subscriber(DTROS):
         while not rospy.is_shutdown():
             rate.sleep()
             area_number, relative_y = self.convert_to_abstract_state()
-            message = str(area_number)
+            if not isinstance(area_number, str):
+                message = str(area_number)
+            else:
+                message = area_number
             rospy.loginfo("Publishing message: '%s'" % message)
             self.pub.publish(message)
             

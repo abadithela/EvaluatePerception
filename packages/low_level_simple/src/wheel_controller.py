@@ -36,8 +36,8 @@ class SpeedControlNode(DTROS):
         
         self.log("Initialized")
 
-    def control_cmd(self):
-        self.control = int(data.data)
+    def control_cmd(self, data):
+        self.control = float(data.data)
 
     def run(self):
         # publish message every 1 second
@@ -52,8 +52,8 @@ class SpeedControlNode(DTROS):
             header.stamp = rospy.Time.now()
             # Running the bot on different velocities at different time interval
             if self.control == 1:
-                self.left_pid.set(0.5)
-                self.right_pid.set(0.5)
+                self.left_pid.set(0.1)
+                self.right_pid.set(0.1)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
             else:

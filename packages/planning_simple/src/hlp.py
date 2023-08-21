@@ -21,13 +21,25 @@ class simple_controller(DTROS):
         self.pub_ctrl = rospy.Publisher(pub_topic_name, String, queue_size=10)
 
     def callback(self, data):
-        self.state = int(data.data)
+        state = data.data
+        if state in ["N/A1", "N/A2", "N/A3", "N/A4"]:
+            self.state = "N/A"
+        else:
+            self.state = float(data.data)
+    
 
     def next_command(self):
-        if self.state <= 5:
-            speed = 1
-        elif self.state == 6:
+        if self.state == "N/A":
             speed = 0
+        else:
+            if self.state <= 5:
+                speed = 1
+            elif self.state == 6:
+                speed = 0
+            else:
+                speed = 0
+        
+        
         return speed
 
     def run(self):
