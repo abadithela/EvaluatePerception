@@ -6,6 +6,7 @@ from duckietown.dtros import DTROS, NodeType
 from std_msgs.msg import String, Header
 from duckietown_msgs.msg import WheelsCmdStamped
 from pid import PID
+import pdb
 #from as_msgs.msg import WheelOdometry
 
 class SpeedControlNode(DTROS):
@@ -52,10 +53,11 @@ class SpeedControlNode(DTROS):
             header.stamp = rospy.Time.now()
             # Running the bot on different velocities at different time interval
             if self.control == 1:
-                self.left_pid.set(0.1)
-                self.right_pid.set(0.1)
+                self.left_pid.set(0.043)
+                self.right_pid.set(0.053)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
+                #rospy.loginfo("Next control command: '%s'" % message)
             else:
                wheelsCmd.vel_right = 0
                wheelsCmd.vel_left = 0

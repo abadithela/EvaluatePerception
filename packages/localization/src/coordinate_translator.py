@@ -69,6 +69,44 @@ class TileMapTranslator:
                 print("4")
 
         return area_number, relative_y
+ 
+    def degrees_from_quaternion(self, x, y, z, w):
+            """
+            This function takes in a quaternion data from optitrack and 
+            returns the angles in degrees (counterclockwise)
+
+            Arguments: 
+            x - the quaternion x as given by optitrack 
+            y - the quaternion z as given by optitrack
+            z - the quaternion y as given by optitrack
+            w - the quaternion w as given by optitrack
+
+            Returns:
+            roll_x - angle around x-axis
+            pitch_y - angle around y-axis
+            yaw_z - angle around z-axis (most useful angle)
+            """
+            import math 
+
+            t0 = +2.0 * (w * x + y * z)
+            t1 = +1.0 - 2.0 * (x * x + y * y)
+            roll_x = math.atan2(t0, t1)
+        
+            t2 = +2.0 * (w * y - z * x)
+            t2 = +1.0 if t2 > +1.0 else t2
+            t2 = -1.0 if t2 < -1.0 else t2
+            pitch_y = math.asin(t2)
+        
+            t3 = +2.0 * (w * z + x * y)
+            t4 = +1.0 - 2.0 * (y * y + z * z)
+            yaw_z = math.atan2(t3, t4)
+
+            roll_x = math.degrees(roll_x)
+            pitch_y = math.degrees(pitch_y)
+            yaw_z = math.degrees(yaw_z)
+        
+            return roll_x, pitch_y, yaw_z # in degrees
+
 
 # Example usage
 if __name__ == "__main__":
@@ -84,9 +122,16 @@ if __name__ == "__main__":
     opti_x = -1.665  #actual optitrack reading
     opti_y = 0.044
 
+    x = 0.025  # x in optitrack
+    y = -0.00805 # z in optitrack
+    z = -.7026 # y in optitrack
+    w = 1
+
 
     area_number, relative_y = translator.translate_coordinate(opti_x, opti_y)
+    x_angle , y_angle, z_angle = translator.degrees_from_quaternion(x, y, z, w)
 
     print(f"Input Coordinate: ({opti_x}, {opti_y})")
     print(f"Relative y: ({str(relative_y)})")
     print("Area Number: " + str(area_number))
+    print(f"x, y, z angles in  degrees: ({x_angle}, {y_angle}, {z_angle})")

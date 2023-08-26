@@ -13,11 +13,11 @@ from geometry_msgs.msg import PoseStamped
 import pdb
 from coordinate_translator import TileMapTranslator
 
-class vrpn_subscriber(DTROS):
+class vrpn_subscriber_1(DTROS):
 
     def __init__(self, node_name, robot_name):
         # initialize the DTROS parent class
-        super(vrpn_subscriber, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
+        super(vrpn_subscriber_1, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         # construct subscriber for the robot:
         self.robot_name = robot_name
         self.vrpn_position_x = None
@@ -26,7 +26,7 @@ class vrpn_subscriber(DTROS):
         self.translator = self.construct_translator()
         sub_topic_name = "/vrpn_client_node/"+self.robot_name+"/pose"
         self.sub = rospy.Subscriber(sub_topic_name, PoseStamped, self.callback)
-        pub_topic_name = "/"+robot_name+"/abstract_state/pose"
+        pub_topic_name = "/"+robot_name+"/angle/pose"
         self.pub = rospy.Publisher(pub_topic_name, String, queue_size=10)
 
     def callback(self, data):
@@ -37,26 +37,26 @@ class vrpn_subscriber(DTROS):
         # rospy.loginfo(rospy.get_caller_id() + 'I heard orientation %s', self.vrpn_orientation)
     
     
-    def convert_to_abstract_state(self):
-        print(self.vrpn_position_x)
-        if self.vrpn_position_x is not None:
-            area_number, relative_y = translator.translate_coordinate(self.vrpn_position_x, self.vrpn_position_z)
-            return area_number, relative_y
+    def convert_to_angle(self):
+        #print(self.vrpn_orientation)
+        if self.vrpn_orientation is not None:
+            roll_x, pitch_y, yaw_z = translator.degrees_from_quaternion(self.vrpn_orientation.x, self.vrpn_orientation.z, self.vrpn_orientation.y, self.vrpn_orientation.w)
+            return yaw_z
 
     
-    def publish_abstract_state(self):
+    def publish_angle(self):
         # publish message every 1 second
         rate = rospy.Rate(1) # 1Hz
         while not rospy.is_shutdown():
             rate.sleep()
-            area_number, relative_y = self.convert_to_abstract_state()
-            if not isinstance(area_number, str):
-                message = str(area_number)
+            yaw_z = self.convert_to_angle()
+            if not isinstance(yaw_z, str):
+                message = str(yaw_z)
             else:
-                message = area_number
-            rospy.loginfo("Publishing message: '%s'" % message)
+                message = yaw_z
+            rospy.loginfo("Publishing angle: '%s'" % message)
             self.pub.publish(message)
-    
+      
 
     def construct_translator(self):
         AREA_WIDTH = 0.146
@@ -71,8 +71,9 @@ class vrpn_subscriber(DTROS):
 
 if __name__ == '__main__':
     # create the node
-    node = vrpn_subscriber(node_name='vrpn_subscriber', robot_name="emma")
+    node = vrpn_subscriber_1(node_name='vrpn_subscriber_1', robot_name="emma")
     translator = node.construct_translator()
-    node.publish_abstract_state()
+    node.publish_angle()
 
     rospy.spin()
+
