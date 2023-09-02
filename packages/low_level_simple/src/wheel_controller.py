@@ -72,6 +72,6 @@ if __name__ == '__main__':
     # create the node
     node = SpeedControlNode(node_name='speed_control_node', robot_name="emma")
     # run node
-    node.run()
+    # node.run()
     # keep spinning
-    rospy.spin()
+    # rospy.spin()

@@ -8,7 +8,7 @@ defined in coordinate_translator.py.
 import os
 import rospy
 from duckietown.dtros import DTROS, NodeType
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 from geometry_msgs.msg import PoseStamped
 import pdb
 from coordinate_translator import TileMapTranslator
@@ -26,8 +26,8 @@ class vrpn_subscriber_1(DTROS):
         self.translator = self.construct_translator()
         sub_topic_name = "/vrpn_client_node/"+self.robot_name+"/pose"
         self.sub = rospy.Subscriber(sub_topic_name, PoseStamped, self.callback)
-        pub_topic_name = "/"+robot_name+"/angle/pose"
-        self.pub = rospy.Publisher(pub_topic_name, String, queue_size=10)
+        pub_topic_name = "/"+robot_name+"/heading"
+        self.pub = rospy.Publisher(pub_topic_name, Float32, queue_size=10)
 
     def callback(self, data):
         self.vrpn_position_x = data.pose.position.x
@@ -50,12 +50,8 @@ class vrpn_subscriber_1(DTROS):
         while not rospy.is_shutdown():
             rate.sleep()
             yaw_z = self.convert_to_angle()
-            if not isinstance(yaw_z, str):
-                message = str(yaw_z)
-            else:
-                message = yaw_z
-            rospy.loginfo("Publishing angle: '%s'" % message)
-            self.pub.publish(message)
+            rospy.loginfo("Publishing angle: '%f'" % yaw_z)
+            self.pub.publish(yaw_z)
       
 
     def construct_translator(self):
