@@ -185,6 +185,6 @@ class HeadingTracker():
         
 if __name__ == "__main__":
     rospy.init_node(f"offset_calculator_node", log_level=rospy.DEBUG)
-    node = HeadingTracker()
+    node = HeadingTracker(robot_name="emma")
     node.run_heading_tracking()
     rospy.spin()
