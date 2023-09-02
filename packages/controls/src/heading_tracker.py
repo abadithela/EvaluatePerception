@@ -9,7 +9,7 @@ import numpy as np
 from pathlib import Path
 
 from include.PIDF import PIDF
-
+import numpy as np
 # from sensor_msgs.msg import Imu
 from as_msgs.msg import WheelOdometry
 from std_msgs.msg import Header, Float32
@@ -23,21 +23,21 @@ class HeadingTracker():
         rospy.loginfo("Initializing")
 
         #Robot params      -------- CHANGE THIS  ---------       
-        self.robot_width = 0.254     # in m
-        self.wheel_radius = 0.0212    # in m
-        self.length = 0.01 # in m 
+        self.robot_width = 0.089     # in m
+        self.wheel_radius = 0.032   # in m
+        self.length = 0.1 # in m 
 
-        self.heading_kP = 0.02
-        self.heading_kI = 0
-        self.heading_kD = 0
+        self.heading_kP = 1
+        self.heading_kI = 1
+        self.heading_kD = 0.03
 
-        self.left_wheel_kP = 0.02
-        self.left_wheel_kI = 0
-        self.left_wheel_kD = 0
+        self.left_wheel_kP = 1
+        self.left_wheel_kI = 1
+        self.left_wheel_kD = 0.03
 
-        self.right_wheel_kP = 0.02
-        self.right_wheel_kI = 0
-        self.right_wheel_kD = 0
+        self.right_wheel_kP = 1
+        self.right_wheel_kI = 1
+        self.right_wheel_kD = 0.03
 
         self.robot_name = robot_name
 
@@ -46,8 +46,8 @@ class HeadingTracker():
         # self.imu_sub = rospy.Subscriber(f"/{self.robot_name}/imu_node/data", Imu, callback=self.integrate)
         self.heading_sub = rospy.Subscriber(f"/{self.robot_name}/heading", Float32, callback = self.heading_callback)
         #Wheel speed speed tracking
-        self.left_speed  = -255
-        self.right_speed = -255
+        self.left_speed  = 0
+        self.right_speed = 0
         self.odometery_sub = rospy.Subscriber(f"/{self.robot_name}/wheel_odometry/odometry",WheelOdometry,self.odometry_cb)
 
         #Wheel speed publisher
@@ -56,7 +56,7 @@ class HeadingTracker():
         # Input publisher to joy mapper:
         car_cmd_topic = f"/{self.robot_name}/joy_mapper_node/car_cmd"
         self.pub_car_cmd = rospy.Publisher(
-            car_cmd_topic, Twist2DStamped, queue_size=1, dt_topic_type=TopicType.CONTROL
+            car_cmd_topic, Twist2DStamped, queue_size=1
         )
 
         #Wheel speed PIDs
@@ -91,15 +91,17 @@ class HeadingTracker():
             u (:obj:`tuple(double, double)`): tuple containing [v, w] for the control action.
         """
         car_control_msg = Twist2DStamped()
-        car_control_msg.header.stamp = rospy.Time.now()
+        #car_control_msg.header.stamp = rospy.Time.now()
         car_control_msg.v = self.v  # v
+        print("Speed", self.v)
         car_control_msg.omega = self.omega  # omega
+        print("Angular speed", self.omega)
         self.pub_car_cmd.publish(car_control_msg)
     
     def track_heading_speed(self, des_heading, des_speed):
-        self.heading_pid.set(des_heading)
-        self.omega = self.heading_pid.update(self.heading)
-        self.v = des_speed
+        heading_error = des_heading - self.heading
+        self.v = des_speed*np.cos(heading_error)
+        self.omega = des_speed/self.robot_width*np.sin(heading_error)
 
     def track_heading_and_speed(self, des_heading, curr_heading, des_speed):
         """
@@ -108,32 +110,36 @@ class HeadingTracker():
         des_speed = V_r (velocity_reference in robot's frame of reference)
         """
         #CONSTANTS
-        dt = 0.01 # Should I calculate this value? self.rospy.Time
+        dt = 0.1 # Should I calculate this value? self.rospy.Time
 
         self.heading_pid.set(des_heading)
-        omega = self.heading_pid.update(curr_heading)
-
-        left_goal  = des_speed + ((omega * self.robot_width) / self.wheel_radius)
-        right_goal = des_speed - ((omega * self.robot_width) / self.wheel_radius)
+        # omega = self.heading_pid.update(curr_heading, dt)
+        
+        heading_error = des_heading - curr_heading
+        Va = des_speed*np.cos(heading_error)
+        omega = des_speed/self.robot_width*np.sin(heading_error)
+        print("current heading: '%f'" % curr_heading)
+        print("omega: '%f'" % omega)
+        left_goal  = (Va + omega * self.robot_width) / self.wheel_radius
+        right_goal = (Va - omega * self.robot_width) / self.wheel_radius
 
         if left_goal >= 0.5:
-            rospy.loginfo("Left goal too high: ", left_goal)
+            print("Left goal too high: '%f'" % left_goal)
             left_goal = 0.5
         
         if right_goal >= 0.5:
-            rospy.loginfo("right goal too high: ", right_goal)
+            print("right goal too high: '%f'" % right_goal)
             right_goal = 0.5
             
         wheelsCmd = WheelsCmdStamped()
         header = Header()
         wheelsCmd.header = header
-        header.stamp = rospy.Time.now()
-        current_time = rospy.get_time()
 
         self.left_pid.set(left_goal)
         self.right_pid.set(right_goal)
-        wheelsCmd.vel_left = self.left_pid.update(left_goal, dt)
-        wheelsCmd.vel_right = self.right_pid.update(right_goal, dt)
+        wheelsCmd.vel_left = self.left_pid.update(self.left_speed, dt)
+        wheelsCmd.vel_right = self.right_pid.update(self.right_speed, dt)
+        print("Publishing wheel commands: '%f'" % self.left_speed)
         self.wheel_pub.publish(wheelsCmd)
 
 
@@ -153,19 +159,20 @@ class HeadingTracker():
         while not rospy.is_shutdown():
             des_heading = 0
             des_speed = 0.1
-            self.track_heading_and_speed(des_heading, self.heading, des_speed)
+            self.track_heading_speed(des_heading, self.heading, des_speed)
             rate.sleep()
+            self.publish_input()
     
     def run_heading_tracking(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             heading_ref = 0
-            speed_ref = 0.05
+            speed_ref = 0.02
             # des_heading, des_speed = self.reference_to_robot_frame(heading_ref, speed_ref)
             self.track_heading_and_speed(heading_ref, self.heading, speed_ref)
             # self.track_heading_speed(des_heading=des_heading, des_speed=des_speed)
             rate.sleep()
-            self.publish_input()
+            
 
 
     def on_shutdown(self):
@@ -186,5 +193,5 @@ class HeadingTracker():
 if __name__ == "__main__":
     rospy.init_node(f"offset_calculator_node", log_level=rospy.DEBUG)
     node = HeadingTracker(robot_name="emma")
-    node.run_heading_tracking()
+    node.run()
     rospy.spin()

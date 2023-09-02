@@ -54,7 +54,7 @@ class vrpn_subscriber(DTROS):
                 message = str(area_number)
             else:
                 message = area_number
-            rospy.loginfo("Publishing message: '%s'" % message)
+            rospy.loginfo("State: '%s'" % message)
             self.pub.publish(message)
     
 

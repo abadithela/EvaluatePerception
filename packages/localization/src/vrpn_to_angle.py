@@ -50,7 +50,7 @@ class vrpn_subscriber_1(DTROS):
         while not rospy.is_shutdown():
             rate.sleep()
             yaw_z = self.convert_to_angle()
-            rospy.loginfo("Publishing angle: '%f'" % yaw_z)
+            rospy.loginfo("Angle: '%f'" % yaw_z)
             self.pub.publish(yaw_z)
       
 

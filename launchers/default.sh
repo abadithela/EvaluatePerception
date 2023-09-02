@@ -15,9 +15,11 @@ dt-launchfile-init
 # launching app
 dt-exec echo "This runs the localization and planning launch script."
 dt-exec rosrun localization vrpn_to_abstract_state.py
-sleep 5
+sleep 2
 dt-exec rosrun localization vrpn_to_angle.py 
-sleep 5
+sleep 2
+dt-exec rosrun wheel_odometry wheel_odometry_node.py
+sleep 2
 dt-exec rosrun controls heading_tracker.py
 
 # ----------------------------------------------------------------------------
