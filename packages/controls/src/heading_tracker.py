@@ -101,7 +101,7 @@ class HeadingTracker():
         self.omega = self.heading_pid.update(self.heading)
         self.v = des_speed
 
-    def track_heading_and_speed(self, des_heading, curr_heading, des_speed, curr_speed):
+    def track_heading_and_speed(self, des_heading, curr_heading, des_speed):
         """
         based on https://ethz.ch/content/dam/ethz/special-interest/mavt/dynamic-systems-n-control/idsc-dam/Lectures/amod/AMOD_2020/20201019-05%20-%20ETHZ%20-%20Control%20in%20Duckietown%20(PID).pdf
         des_heading = theta_r (theta_reference in the robot's frame of reference)
@@ -153,7 +153,7 @@ class HeadingTracker():
         while not rospy.is_shutdown():
             des_heading = 0
             des_speed = 0.1
-            self.track_heading_and_speed(des_heading, self.heading, des_speed, self.speed)
+            self.track_heading_and_speed(des_heading, self.heading, des_speed)
             rate.sleep()
     
     def run_heading_tracking(self):
@@ -161,8 +161,9 @@ class HeadingTracker():
         while not rospy.is_shutdown():
             heading_ref = 0
             speed_ref = 0.05
-            des_heading, des_speed = self.reference_to_robot_frame(heading_ref, speed_ref)
-            self.track_heading_speed(des_heading=des_heading, des_speed=des_speed)
+            # des_heading, des_speed = self.reference_to_robot_frame(heading_ref, speed_ref)
+            self.track_heading_and_speed(heading_ref, self.heading, speed_ref)
+            # self.track_heading_speed(des_heading=des_heading, des_speed=des_speed)
             rate.sleep()
             self.publish_input()
 
