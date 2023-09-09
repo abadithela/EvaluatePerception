@@ -12,9 +12,9 @@ from include.PIDF import PIDF
 import numpy as np
 # from sensor_msgs.msg import Imu
 from as_msgs.msg import WheelOdometry
-from std_msgs.msg import Header, Float32
+from std_msgs.msg import Header, Float32, String
 from duckietown_msgs.msg import WheelsCmdStamped, Twist2DStamped
-from offset_calculator import OffsetCalculator
+# from offset_calculator import OffsetCalculator
 from include.differential_drive_kinematics import DifferentialDriveKinematics
 
 
@@ -43,8 +43,10 @@ class HeadingTracker():
 
         # IMU ---------------------------CHANGE THIS WITH OPTITRACK HEADING--------------------------------------------
         self.heading = 0
+        self.state = '1'
         # self.imu_sub = rospy.Subscriber(f"/{self.robot_name}/imu_node/data", Imu, callback=self.integrate)
         self.heading_sub = rospy.Subscriber(f"/{self.robot_name}/heading", Float32, callback = self.heading_callback)
+        self.state_sub = rospy.Subscriber(f"/{self.robot_name}/abstract_state/pose", String, callback = self.high_level_state_cb)
         #Wheel speed speed tracking
         self.left_speed  = 0
         self.right_speed = 0
@@ -54,7 +56,7 @@ class HeadingTracker():
         self.wheel_pub = rospy.Publisher(f"/{self.robot_name}/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size=1)
 
         # Input publisher to joy mapper:
-        car_cmd_topic = f"/{self.robot_name}/joy_mapper_node/car_cmd"
+        car_cmd_topic = f"/{self.robot_name}/kinematics_node/velocity"
         self.pub_car_cmd = rospy.Publisher(
             car_cmd_topic, Twist2DStamped, queue_size=1
         )
@@ -75,7 +77,11 @@ class HeadingTracker():
 
     def heading_callback(self, heading):
         self.heading = heading.data
-        rospy.logdebug(" + Heading values = " + str(self.heading))
+        print(" + Heading values = " + str(self.heading))
+
+    def high_level_state_cb(self, data):
+        self.state = data.data
+        # print(" + High level cmd = " + str(self.state))
 
     def integrate(self, imu_out):
         """
@@ -120,8 +126,8 @@ class HeadingTracker():
         omega = des_speed/self.robot_width*np.sin(heading_error)
         print("current heading: '%f'" % curr_heading)
         print("omega: '%f'" % omega)
-        left_goal  = (Va + omega * self.robot_width) / self.wheel_radius
-        right_goal = (Va - omega * self.robot_width) / self.wheel_radius
+        left_goal  = (Va - 0.5 * omega * self.robot_width) 
+        right_goal = (Va + 0.5 * omega * self.robot_width) 
 
         if left_goal >= 0.5:
             print("Left goal too high: '%f'" % left_goal)
@@ -135,11 +141,21 @@ class HeadingTracker():
         header = Header()
         wheelsCmd.header = header
 
-        self.left_pid.set(left_goal)
-        self.right_pid.set(right_goal)
-        wheelsCmd.vel_left = self.left_pid.update(self.left_speed, dt)
-        wheelsCmd.vel_right = self.right_pid.update(self.right_speed, dt)
-        print("Publishing wheel commands: '%f'" % self.left_speed)
+        # self.left_pid.set(0)
+        # self.right_pid.set(0)
+        # wheelsCmd.vel_left = self.left_pid.update(0, dt)
+        # wheelsCmd.vel_right = self.right_pid.update(0, dt)
+
+        # self.left_pid.set(left_goal)
+        # self.right_pid.set(right_goal)
+        # wheelsCmd.vel_left = self.left_pid.update(self.left_speed, dt)
+        # wheelsCmd.vel_right = self.right_pid.update(self.right_speed, dt)
+
+        wheelsCmd.vel_left = left_goal
+        wheelsCmd.vel_right = right_goal
+
+        print("Computed wheel speeds: ", self.left_speed, self.right_speed)
+        print("Publishing PID wheel commands: ", wheelsCmd.vel_left, wheelsCmd.vel_right)
         self.wheel_pub.publish(wheelsCmd)
 
 
@@ -157,24 +173,28 @@ class HeadingTracker():
     def run(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
-            des_heading = 0
-            des_speed = 0.1
-            self.track_heading_speed(des_heading, self.heading, des_speed)
-            rate.sleep()
-            self.publish_input()
+            if self.state not in ["N/A1", "NA/2", "N/A3", "N/A4"]:
+                des_heading = 0
+                des_speed = 0.1
+                self.track_heading_speed(des_heading, des_speed)
+                rate.sleep()
+                self.publish_input()
+            else:
+                self.on_shutdown()
     
     def run_heading_tracking(self):
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(1)
         while not rospy.is_shutdown():
-            heading_ref = 0
-            speed_ref = 0.02
-            # des_heading, des_speed = self.reference_to_robot_frame(heading_ref, speed_ref)
-            self.track_heading_and_speed(heading_ref, self.heading, speed_ref)
-            # self.track_heading_speed(des_heading=des_heading, des_speed=des_speed)
-            rate.sleep()
+            if self.state not in ["N/A1", "NA/2", "N/A3", "N/A4"]:
+                heading_ref = 0
+                speed_ref = 0.02
+                # des_heading, des_speed = self.reference_to_robot_frame(heading_ref, speed_ref)
+                self.track_heading_and_speed(heading_ref, self.heading, speed_ref)
+                # self.track_heading_speed(des_heading=des_heading, des_speed=des_speed)
+                rate.sleep()
+            else:
+                self.on_shutdown()
             
-
-
     def on_shutdown(self):
     #send a zero velocity wheel command
 
@@ -188,10 +208,11 @@ class HeadingTracker():
     def odometry_cb(self,data):
         self.left_speed = data.left_wheel_velocity
         self.right_speed = data.right_wheel_velocity
-        self.log(data)
+        
         
 if __name__ == "__main__":
     rospy.init_node(f"offset_calculator_node", log_level=rospy.DEBUG)
     node = HeadingTracker(robot_name="emma")
+    #node.run_heading_tracking()
     node.run()
     rospy.spin()

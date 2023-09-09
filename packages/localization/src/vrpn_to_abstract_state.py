@@ -38,7 +38,6 @@ class vrpn_subscriber(DTROS):
     
     
     def convert_to_abstract_state(self):
-        print(self.vrpn_position_x)
         if self.vrpn_position_x is not None:
             area_number, relative_y = translator.translate_coordinate(self.vrpn_position_x, self.vrpn_position_z)
             return area_number, relative_y
@@ -46,7 +45,7 @@ class vrpn_subscriber(DTROS):
     
     def publish_abstract_state(self):
         # publish message every 1 second
-        rate = rospy.Rate(1) # 1Hz
+        rate = rospy.Rate(10) # 1Hz
         while not rospy.is_shutdown():
             rate.sleep()
             area_number, relative_y = self.convert_to_abstract_state()
@@ -54,7 +53,7 @@ class vrpn_subscriber(DTROS):
                 message = str(area_number)
             else:
                 message = area_number
-            rospy.loginfo("State: '%s'" % message)
+            # rospy.loginfo("State: '%s'" % message)
             self.pub.publish(message)
     
 

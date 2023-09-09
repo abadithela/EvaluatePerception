@@ -1,8 +1,8 @@
 <package>
-  <name>perception</name>
+  <name>wheel_odometry</name>
   <version>0.1.0</version>
   <description>
-    Perception Module for Duckietown
+    Wheel odometry
   </description>
   <maintainer email="YOUR_EMAIL@EXAMPLE.COM">YOUR_FULL_NAME</maintainer>
   <license>None</license>

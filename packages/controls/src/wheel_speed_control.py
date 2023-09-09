@@ -17,9 +17,9 @@ class SpeedControlNode(DTROS):
 
     """
 
-    def __init__(self, node_name):
+    def __init__(self, node_name,robot_name):
         # initialize the DTROS parent class
-        super(SpeedControlNode, self).__init__(node_name=node_name, robot_name=robot_name, node_type=NodeType.GENERIC)
+        super(SpeedControlNode, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         # construct publisher
         self.robot_name = robot_name
         self.wheel_pub = rospy.Publisher(f"/{self.robot_name}/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size=1)
@@ -40,7 +40,7 @@ class SpeedControlNode(DTROS):
 
     def run(self):
         # publish message every 1 second
-        rate = rospy.Rate(10) # 1Hz
+        rate = rospy.Rate(1) # 1Hz
         start_time = rospy.get_time()
         while not rospy.is_shutdown():
             self.log("sending command")
@@ -53,29 +53,31 @@ class SpeedControlNode(DTROS):
             current_time = rospy.get_time()
 
             # Running the bot on different velocities at different time interval
-            if 5 < current_time - start_time <= 10:
+            if 5 < current_time - start_time <= 25:
+                print("slow wheel command")
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
 
-            elif 10 < current_time - start_time <= 15:
+            elif 25 < current_time - start_time <= 50:
                 self.left_pid.set(0.2)
                 self.right_pid.set(0.2)
+                print("intermediate wheel command")
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
 
-            elif 15 < current_time - start_time <= 20:
+            elif 50 < current_time - start_time <= 75:
                 self.left_pid.set(0.3)
                 self.right_pid.set(0.3)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
             
-            elif 20 < current_time - start_time <= 25:
+            elif 75 < current_time - start_time <= 100:
                 self.left_pid.set(0.4)
                 self.right_pid.set(0.4)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
             
-            elif current_time - start_time > 25:
+            elif current_time - start_time > 100:
                 self.left_pid.set(0)
                 self.right_pid.set(0)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
@@ -83,8 +85,9 @@ class SpeedControlNode(DTROS):
                 print("Running on 0.0")
                 
             else:
-               wheelsCmd.vel_right = 0
-               wheelsCmd.vel_left = 0
+                print("direct wheels zero")
+                wheelsCmd.vel_right = 0
+                wheelsCmd.vel_left = 0
             self.wheel_pub.publish(wheelsCmd)
             
             rate.sleep()
@@ -93,12 +96,12 @@ class SpeedControlNode(DTROS):
 
         #send a zero velocity wheel command
 
-            wheelsCmd = WheelsCmdStamped()
-            header = Header()
-            wheelsCmd.header = header
-            wheelsCmd.vel_right = 0
-            wheelsCmd.vel_left = 0
-            self.wheel_pub.publish(wheelsCmd)
+        wheelsCmd = WheelsCmdStamped()
+        header = Header()
+        wheelsCmd.header = header
+        wheelsCmd.vel_right = 0
+        wheelsCmd.vel_left = 0
+        self.wheel_pub.publish(wheelsCmd)
 
     def odometry_cb(self,data):
         self.left_speed = data.left_wheel_velocity
@@ -118,8 +121,9 @@ class SpeedControlNode(DTROS):
 if __name__ == '__main__':
     # create the node
     robot_name = "emma"
-    node = SpeedControlNode(node_name='speed_control_node', robot_name=robot_name)
+    node = SpeedControlNode(node_name='speed_control_node', robot_name="emma")
     # run node
-    node.run()
+    # node.run()
+    node.on_shutdown()
     # keep spinning
     rospy.spin()

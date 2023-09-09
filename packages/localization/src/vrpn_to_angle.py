@@ -46,11 +46,11 @@ class vrpn_subscriber_1(DTROS):
     
     def publish_angle(self):
         # publish message every 1 second
-        rate = rospy.Rate(1) # 1Hz
+        rate = rospy.Rate(10) # 1Hz
         while not rospy.is_shutdown():
             rate.sleep()
             yaw_z = self.convert_to_angle()
-            rospy.loginfo("Angle: '%f'" % yaw_z)
+            # rospy.loginfo("Angle: '%f'" % yaw_z)
             self.pub.publish(yaw_z)
       
 

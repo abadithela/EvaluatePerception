@@ -44,11 +44,11 @@ class simple_controller(DTROS):
 
     def run(self):
         # publish message every 1 second
-        rate = rospy.Rate(1) # 1Hz
+        rate = rospy.Rate(10) # 1Hz
         while not rospy.is_shutdown():
             next_cmd = self.next_command()
             message = str(next_cmd)
-            rospy.loginfo("Next control command: '%s'" % message)
+            # rospy.loginfo("Next control command: '%s'" % message)
             self.pub_ctrl.publish(message)
             rate.sleep()
 

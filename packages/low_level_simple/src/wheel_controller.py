@@ -57,6 +57,8 @@ class SpeedControlNode(DTROS):
                 self.right_pid.set(0.053)
                 wheelsCmd.vel_right = self.right_pid.update(self.right_speed,0.1)
                 wheelsCmd.vel_left = self.left_pid.update(self.left_speed,0.1)
+                print("Right wheel speed: ", wheelsCmd.vel_right)
+                print("Left wheel speed: ", wheelsCmd.vel_left)
                 #rospy.loginfo("Next control command: '%s'" % message)
             else:
                wheelsCmd.vel_right = 0

@@ -18,9 +18,14 @@ dt-exec rosrun localization vrpn_to_abstract_state.py
 sleep 2
 dt-exec rosrun localization vrpn_to_angle.py 
 sleep 2
-dt-exec rosrun wheel_odometry wheel_odometry_node.py
+dt-exec rosrun planning_simple hlp.py
 sleep 2
-dt-exec rosrun controls heading_tracker.py
+dt-exec rosrun controls heading_tracker_wheel_speeds.py
+
+# dt-exec rosrun planning_simple hlp.py
+# sleep 2
+# dt-exec rosrun low_level_simple wheel_controller.py
+# dt-exec rosrun controls heading_tracker_wheel_speeds.py
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE

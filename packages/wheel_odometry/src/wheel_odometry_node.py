@@ -59,7 +59,7 @@ class WheelOdometryNode(DTROS):
             WheelOdometry,
             queue_size=1
         )
-
+        print("Initialized odometry node")
         self.log("Initalized!")
 
     def left_encoder_cb(self, data):
@@ -128,8 +128,11 @@ class WheelOdometryNode(DTROS):
         odometry_msg.delta = dt
         odometry_msg.left_wheel_velocity = left_mps
         odometry_msg.right_wheel_velocity = right_mps
+
+        # Publish message
+        # print("Publish wheel odometry message")
         self.odom_pub.publish(odometry_msg)
     
 if __name__ ==  "__main__":
-    node = WheelOdometryNode(node_name="wheel_odometry")
+    node = WheelOdometryNode(node_name="wheel_odometry", robot_name="emma")
     rospy.spin()

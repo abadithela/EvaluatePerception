@@ -1,3 +1,0 @@
-<launch>
-    <node name="offset_calcualator" pkg="controls" type="offset_calculator.py" output="screen"/>
-</launch>

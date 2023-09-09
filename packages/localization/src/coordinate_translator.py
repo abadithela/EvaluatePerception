@@ -39,7 +39,7 @@ class TileMapTranslator:
             else:
                 relative_y = abs(opti_y - self.origin_y_1)
                 area_number = int(relative_y / self.area_height) + 1  #section on the mat
-                print("1")
+                
 
         elif self.origin_y_1 == self.origin_y_2 and self.origin_x_1 > self.origin_x_2: #mat pointing down
             if opti_x < self.origin_x_1 or opti_x > self.origin_x_2 or opti_y > self.origin_y_1: #makes sure object is on mat
@@ -48,7 +48,7 @@ class TileMapTranslator:
             else:
                 relative_y = abs(opti_y - self.origin_y_1)
                 area_number = int(relative_y / self.area_height) + 1  #section on the mat
-                print("2")
+                
 
         elif self.origin_x_1 == self.origin_x_2 and self.origin_y_1 < self.origin_y_2: #mat pointing left
             if opti_x > self.origin_x_1 or opti_y > self.origin_y_2 or opti_y < self.origin_y_1: #makes sure object is on mat
@@ -57,7 +57,7 @@ class TileMapTranslator:
             else:
                 relative_y = abs(opti_x - self.origin_x_1)
                 area_number = int(relative_y / self.area_height) + 1 #section on the mat
-                print("3")
+                
 
         elif self.origin_x_1 == self.origin_x_2 and self.origin_y_1 > self.origin_y_2: #mat pointing right
             if opti_x < self.origin_x_1 or opti_y > self.origin_y_2 or opti_y < self.origin_y_1: #makes sure object is on mat
@@ -66,7 +66,7 @@ class TileMapTranslator:
             else:
                 relative_y = abs(opti_x - self.origin_x_1)
                 area_number = int(relative_y / self.area_height) + 1 #section on the mat
-                print("4")
+                
 
         return area_number, relative_y
  
