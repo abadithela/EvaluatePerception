@@ -17,7 +17,7 @@ from duckietown.dtros import DTROS, NodeType
 
 
 class HeadingTracker(DTROS):
-    def __init__(self, node_name, robot_name, gain=0.6, trim=0.1):
+    def __init__(self, node_name, robot_name, gain=1, trim=0.0):
         super(HeadingTracker, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         rospy.loginfo("Initializing")
 
@@ -43,6 +43,7 @@ class HeadingTracker(DTROS):
         self.right_wheel_duty = 0
         self.k_r_inv = (gain + trim)/27.0
         self.k_l_inv = (gain-trim)/27.0
+        self.ktheta = -5
 
         #Wheel speed publisher
         self.pub_wheel_cmd = rospy.Publisher(f"/{self.robot_name}/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size=1)
@@ -103,8 +104,10 @@ class HeadingTracker(DTROS):
         des_speed = V_r (velocity_reference in robot's frame of reference)
         """
         heading_error = des_heading - self.heading
-        Va = des_speed*np.cos(heading_error)
-        omega = des_speed/self.robot_width*np.sin(heading_error)
+        # Va = des_speed*np.cos(heading_error)
+        # omega = des_speed/self.robot_width*np.sin(heading_error)
+        Va = des_speed
+        omega = self.ktheta*(heading_error * math.pi/180)
         print("current heading: '%f'" % self.heading)
         print("omega: '%f'" % omega)
         self.vleft  = (Va - 0.5 * omega * self.robot_width) 
