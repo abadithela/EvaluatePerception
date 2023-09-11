@@ -17,7 +17,7 @@ from duckietown.dtros import DTROS, NodeType
 
 
 class HeadingTracker(DTROS):
-    def __init__(self, node_name, robot_name):
+    def __init__(self, node_name, robot_name, gain=0.6, trim=0.1):
         super(HeadingTracker, self).__init__(node_name=node_name, node_type=NodeType.GENERIC)
         rospy.loginfo("Initializing")
 
@@ -39,6 +39,10 @@ class HeadingTracker(DTROS):
         #Wheel speed speed tracking
         self.vleft  = 0
         self.vleft = 0
+        self.left_wheel_duty = 0
+        self.right_wheel_duty = 0
+        self.k_r_inv = (gain + trim)/27.0
+        self.k_l_inv = (gain-trim)/27.0
 
         #Wheel speed publisher
         self.pub_wheel_cmd = rospy.Publisher(f"/{self.robot_name}/wheels_driver_node/wheels_cmd", WheelsCmdStamped, queue_size=1)
@@ -73,12 +77,17 @@ class HeadingTracker(DTROS):
         self.pub_car_cmd.publish(car_control_msg)
     
     def publish_wheel_cmd_input(self):
+        self.right_wheel_duty = np.max([np.min([self.right_wheel_duty, 1]), -1])
+        self.left_wheel_duty = np.max([np.min([self.left_wheel_duty, 1]), -1])
+        print("Left wheel command: '%f'" % self.left_wheel_duty)
+        print("Right wheel command: '%f'" % self.right_wheel_duty)
+
         wheelsCmd = WheelsCmdStamped()
         header = Header()
         wheelsCmd.header = header
         header.stamp = rospy.Time.now()
-        wheelsCmd.vel_left = self.vleft
-        wheelsCmd.vel_right = self.vright
+        wheelsCmd.vel_left = self.left_wheel_duty
+        wheelsCmd.vel_right = self.right_wheel_duty
         self.pub_wheel_cmd.publish(wheelsCmd)
     
     def track_heading_w_car_cmd(self, des_heading, des_speed):
@@ -100,16 +109,18 @@ class HeadingTracker(DTROS):
         print("omega: '%f'" % omega)
         self.vleft  = (Va - 0.5 * omega * self.robot_width) 
         self.vright = (Va + 0.5 * omega * self.robot_width) 
+        self.left_wheel_duty = self.vleft/self.wheel_radius * self.k_l_inv
+        self.right_wheel_duty = self.vright/self.wheel_radius * self.k_r_inv
         print("Left wheel speed: '%f'" % self.vleft)
         print("Right wheel speed: '%f'" % self.vright)
 
-        if self.vleft >= 0.5:
-            print("Left goal too high; resetting: '%f'" % self.vleft)
-            self.vleft = 0.5
+        # if self.vleft >= 0.5:
+        #     print("Left goal too high; resetting: '%f'" % self.vleft)
+        #     self.vleft = 0.5
         
-        if self.vright >= 0.5:
-            print("right goal too high: '%f'" % self.vright)
-            self.vright = 0.5
+        # if self.vright >= 0.5:
+        #     print("right goal too high: '%f'" % self.vright)
+        #     self.vright = 0.5
             
         self.publish_wheel_cmd_input()
 
@@ -125,7 +136,7 @@ class HeadingTracker(DTROS):
                 self.on_shutdown()
     
     def run_wheel_cmd(self):
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(1)
         rospy.loginfo("Trying to run wheel commANDS")
         # while not rospy.is_shutdown():
         while not rospy.is_shutdown():
