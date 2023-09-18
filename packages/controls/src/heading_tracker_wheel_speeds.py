@@ -8,7 +8,6 @@ import math
 import numpy as np
 from pathlib import Path
 
-import numpy as np
 # from sensor_msgs.msg import Imu
 from std_msgs.msg import Header, Float32, String
 from duckietown_msgs.msg import WheelsCmdStamped, Twist2DStamped

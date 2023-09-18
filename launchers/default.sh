@@ -20,8 +20,11 @@ dt-exec rosrun localization vrpn_to_angle.py
 sleep 2
 dt-exec rosrun planning_simple hlp.py
 sleep 2
-dt-exec rosrun controls heading_tracker_wheel_speeds.py
-
+dt-exec rosrun controls pure_pursuit_heading.py
+sleep 2
+dt-exec rosrun controls heading_tracker.py
+# sleep 2
+# dt-exec rosrun controls lane_pose_publish.py
 # dt-exec rosrun planning_simple hlp.py
 # sleep 2
 # dt-exec rosrun low_level_simple wheel_controller.py
