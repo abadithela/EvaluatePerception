@@ -53,7 +53,7 @@ class HeadingTracker(DTROS):
         self.control = float(data.data)
 
     def heading_callback(self, heading):
-        self.heading = heading.data
+        self.heading = heading.data * math.pi/180 # Convert to radians
     
     def heading_ref_cb(self, heading_ref):
         self.heading_ref = heading_ref.data
@@ -86,8 +86,10 @@ class HeadingTracker(DTROS):
         # Va = des_speed*np.cos(heading_error)
         # omega = des_speed/self.robot_width*np.sin(heading_error)
         Va = des_speed
-        omega = self.ktheta*(heading_error * math.pi/180)
+        omega = self.ktheta*(heading_error)
+        print("Computing wheel speeds ")
         print("current heading: '%f'" % self.heading)
+        print("heading error: '%f'" % heading_error)
         print("omega: '%f'" % omega)
         self.vleft  = (Va - 0.5 * omega * self.robot_width) 
         self.vright = (Va + 0.5 * omega * self.robot_width) 
@@ -95,12 +97,16 @@ class HeadingTracker(DTROS):
         self.right_wheel_duty = self.vright/self.wheel_radius * self.k_r_inv
         print("Left wheel speed: '%f'" % self.vleft)
         print("Right wheel speed: '%f'" % self.vright)
+        print("Left wheel duty: '%f'" % self.left_wheel_duty)
+        print("Right wheel duty: '%f'" % self.right_wheel_duty)
+        print(" ")
 
         self.publish_wheel_cmd_input()
     
     def run_wheel_cmd(self):
         rate = rospy.Rate(1)
         rospy.loginfo("Trying to run wheel commANDS")
+        rate.sleep()
         # while not rospy.is_shutdown():
         while not rospy.is_shutdown():
             if self.control == 1:

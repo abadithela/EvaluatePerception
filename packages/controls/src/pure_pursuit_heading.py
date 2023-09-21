@@ -25,6 +25,11 @@ class HeadingRefPP(DTROS):
         self.robot_width = 0.089     # in m
         self.wheel_radius = 0.032   # in m
         self.robot_name = robot_name
+        self.origin_x_1 = -1.72  #bottom of mat bottom corner/middle (must be right most in lab)
+        self.origin_x_2 = -1.574  #bottom of mat bottom corner/middle (must be left most in lab)
+        self.origin_lane_center = np.abs((self.origin_x_1 + self.origin_x_2)/2) # center of lane/not yellow line
+        self.lane_width = self.origin_lane_center - self.origin_x_1
+        self.lateral_ref = 0.114 # m
 
         # IMU ---------------------------CHANGE THIS WITH OPTITRACK HEADING--------------------------------------------
         self.heading = 0
@@ -36,7 +41,6 @@ class HeadingRefPP(DTROS):
 
         #Wheel speed speed tracking
         self.heading_ref = 0
-        self.lateral_ref = 0.114 # m
         self.L = 0.2 # m. 
 
         #Wheel speed publisher
@@ -45,37 +49,36 @@ class HeadingRefPP(DTROS):
         rospy.loginfo("pure pursuit initialized")
 
     def position_sub_cb(self, data):
-        self.x = data.pose.position.x
+        self.x = np.abs(data.pose.position.x)
         self.z = data.pose.position.z
 
     def heading_callback(self, heading):
         self.heading = heading.data
 
     def compute_heading_ref(self):
-        self.heading_ref = np.arctan(self.x/self.L)
+        d = self.x - self.origin_lane_center
+        self.heading_ref = np.arctan(d/self.L)
+        print("Computing heading reference at ")
+        print("Heading reference: '%f'" % self.heading_ref)
+        print("d to reference: '%f'" % d)
+        print("Absolute position: '%f'" % self.x)
+        print("Lane center: '%f'" % self.origin_lane_center)
+        print(" ")
     
 
     def publish_heading_ref(self):
         """Publishes heading reference
         """
         self.pub_heading_ref.publish(self.heading_ref)
+        
 
     def run_publish_heading_cmd(self):
         rate = rospy.Rate(1) # 1Hz
+        rate.sleep()
         while not rospy.is_shutdown():
             self.compute_heading_ref()
             self.publish_heading_ref()
             rate.sleep()
-            
-    def on_shutdown(self):
-    #send a zero velocity wheel command
-        wheelsCmd = WheelsCmdStamped()
-        header = Header()
-        wheelsCmd.header = header
-        header.stamp = rospy.Time.now()
-        wheelsCmd.vel_right = 0
-        wheelsCmd.vel_left = 0
-        self.pub_wheel_cmd.publish(wheelsCmd)
         
         
 if __name__ == "__main__":

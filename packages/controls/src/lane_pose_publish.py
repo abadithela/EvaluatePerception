@@ -68,7 +68,7 @@ class LanePosePublisher(DTROS):
         lanePose.header = header
         lanePose.d = self.x - self.origin_lane_center
         lanePose.d_ref = -1*self.lateral_ref
-        if self.x <= self.origin_lane_center and self.x >= self.origin_x_1:
+        if self.x <= self.origin_x_2 and self.x >= self.origin_x_1:
             lanePose.in_lane = True
         else:
             lanePose.in_lane = False
