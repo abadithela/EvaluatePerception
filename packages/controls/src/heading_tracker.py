@@ -104,7 +104,7 @@ class HeadingTracker(DTROS):
         self.publish_wheel_cmd_input()
     
     def run_wheel_cmd(self):
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(10)
         rospy.loginfo("Trying to run wheel commANDS")
         rate.sleep()
         # while not rospy.is_shutdown():
