@@ -2,6 +2,9 @@ import rospy
 
 from std_msgs.msg import Int32, Float64, String
 
+######################## Change this file to a different file in this folder #########################
+import ped_controller
+######################################################################################################
 class PlannerInterface():
     def __init__(self, robot_name) -> None:
         
@@ -13,6 +16,8 @@ class PlannerInterface():
         self.curr_abstract_speed = -255
         self.curr_abstract_state = -255
         
+        self.planner = ped_controller.TulipStrategy()
+        
         self.state_pub = rospy.Publisher(f"{robot_name}/planner/abstract_state", Int32)
         self.speed_pub = rospy.Publisher(f"{robot_name}/planner/abstract_speed", Int32)
         
@@ -22,6 +27,12 @@ class PlannerInterface():
         raw_in = data.data
         if "N/A" not in raw_in:
             self.curr_abstract_state = int(raw_in)
+            
+    def update(self):
+        output = self.planner.move(self.curr_abstract_state)
+        
+        self.target_abstract_speed = output["vcar"]
+        self.target_abstract_state = output["xcar"]
             
 
     def run(self):
